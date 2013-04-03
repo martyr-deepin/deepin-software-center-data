@@ -1,0 +1,1 @@
+Deepin Software Center Data
