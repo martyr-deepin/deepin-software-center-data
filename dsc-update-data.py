@@ -26,11 +26,13 @@ import dbus.mainloop.glib
 import glib
 import signal
 from deepin_utils.ipc import auth_with_policykit, is_dbus_name_exists
-from deepin_utils.file import get_parent_dir, create_directory, write_file, eval_file, remove_file, remove_directory, remove_path
+from deepin_utils.file import get_parent_dir, create_directory, remove_file, remove_directory, remove_path
 from deepin_utils.config import Config
 from deepin_utils.hash import md5_file
 from pystorm.tasks import TaskObject
-from gevent.queue import Queue
+from pystorm.logger import setLevelNo
+import logging
+setLevelNo(logging.INFO)
 import urllib2
 import os, sys
 import tarfile
@@ -163,6 +165,7 @@ class UpdateDataService(dbus.service.Object):
                 session_bus = dbus.SessionBus()
                 bus_obj = session_bus.get_object(DSC_SERVICE_NAME, DSC_SERVICE_PATH)
                 bus_interface = dbus.Interface(bus_obj, DSC_SERVICE_NAME)
+                bus_interface.say_hello()
                 session_bus.add_signal_receiver(
                         self.dsc_fronend_signal_handler,
                         dbus_interface = DSC_SERVICE_NAME,
@@ -281,7 +284,6 @@ class UpdateDataService(dbus.service.Object):
         if not os.path.exists(self.data_newest_dir):
             create_directory(self.data_newest_dir)
         data_filename = "%s.tar.gz" % space_name
-        patch_dir = os.path.join(self.data_patch_dir, space_name)
         patch_name = self.patch_status_config.get("data_md5", space_name)[0]
 
         origin_data_file = os.path.join(self.data_origin_dir, data_filename)
@@ -333,6 +335,7 @@ if __name__ == "__main__":
             
             # Init package manager.
             log("Start update data...")
+            arguments.append("--test")
             UpdateDataService(system_bus, mainloop).run("--test" in arguments)
             
             # Run.
