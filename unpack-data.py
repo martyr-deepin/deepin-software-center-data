@@ -25,9 +25,9 @@ from deepin_utils.file import get_parent_dir, remove_file, remove_path
 from deepin_utils.config import Config
 import uuid
 import tarfile
+from constant import UPDATE_DATE
 
 DATA_DIR = os.path.join(get_parent_dir(__file__), "data")
-UPDATE_DATE = "2013-04-03"  # origin data update date flag
 
 data_origin_dir = os.path.join(DATA_DIR, "origin")
 data_newest_dir = os.path.join(DATA_DIR, "newest")

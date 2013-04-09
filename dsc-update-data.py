@@ -41,6 +41,8 @@ import subprocess
 from datetime import datetime
 import time
 
+from constant import UPDATE_DATE
+
 DSC_UPDATER_NAME = "com.linuxdeepin.softwarecenterupdater"
 DSC_UPDATER_PATH = "/com/linuxdeepin/softwarecenterupdater"
 
@@ -50,8 +52,6 @@ DSC_SERVICE_PATH = "/com/linuxdeepin/softwarecenter"
 
 DATA_DIR = os.path.join(get_parent_dir(__file__), "data")
 UPDATE_DATA_URL = "b0.upaiyun.com"
-
-UPDATE_DATE = "2013-04-03"  # origin data update date flag
 
 LOG_PATH = "/tmp/dsc-update-data.log"
 
@@ -137,9 +137,8 @@ class UpdateDataService(dbus.service.Object):
             
         if self.have_update:
             # Apply update data.
-            for space_name in os.listdir(self.data_patch_dir):
-                if space_name in self.have_update:
-                    self.apply_data(space_name)
+            for space_name in self.have_update:
+                self.apply_data(space_name)
                 
             # Extra data.
             newest_data_id = self.get_unique_id()
@@ -147,10 +146,12 @@ class UpdateDataService(dbus.service.Object):
             
             print "解压最新数据..."
             log("解压最新数据...")
-            for data_file in os.listdir(self.data_newest_dir):
-                space_name = data_file.split(".tar.gz")[0]
-                with tarfile.open(os.path.join(self.data_newest_dir, data_file), "r:gz") as tar_file:
+            for space_name in self.have_update:
+                data_file = space_name+".tar.gz"
+                newest_file = os.path.join(self.data_newest_dir, data_file)
+                with tarfile.open(newest_file, "r:gz") as tar_file:
                     tar_file.extractall(newest_data_dir)
+                remove_file(newest_file)
             print "解压最新数据完成"
             log("解压最新数据完成")
             
@@ -292,6 +293,8 @@ class UpdateDataService(dbus.service.Object):
 
         print "%s: 补丁%s合并开始..." % (space_name, patch_name)
         log("%s: 补丁%s合并开始..." % (space_name, patch_name))
+        if os.path.exists(newest_data_file):
+            remove_file(newest_data_file)
         subprocess.Popen("xdelta3 -ds %s %s %s" % (origin_data_file,
                                                     patch_file,
                                                     newest_data_file),
