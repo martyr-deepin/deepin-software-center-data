@@ -146,12 +146,10 @@ class UpdateDataService(dbus.service.Object):
             
             print "解压最新数据..."
             log("解压最新数据...")
-            for space_name in self.have_update:
-                data_file = space_name+".tar.gz"
+            for data_file in os.listdir(self.data_newest_dir):
                 newest_file = os.path.join(self.data_newest_dir, data_file)
                 with tarfile.open(newest_file, "r:gz") as tar_file:
                     tar_file.extractall(newest_data_dir)
-                remove_file(newest_file)
             print "解压最新数据完成"
             log("解压最新数据完成")
             
