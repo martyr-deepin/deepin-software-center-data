@@ -40,6 +40,7 @@ import uuid
 import subprocess
 from datetime import datetime
 import time
+import json
 
 from constant import UPDATE_DATE
 
@@ -242,13 +243,14 @@ class UpdateDataService(dbus.service.Object):
         patch_list_url = "%s/patch/%s/patch_md5.json" % (remote_url, origin_data_md5)    
 
         try:
-            patch_list_json = eval(urllib2.urlopen(patch_list_url).read())
-        except:
+            patch_list_json = json.load(urllib2.urlopen(patch_list_url))
+        except Exception, e:
+            print e
             patch_list_json = ""
             
         if patch_list_json != "":
-            patch_name = patch_list_json["current_patch"][0]["name"]
-            patch_md5 = patch_list_json["current_patch"][0]["md5"]
+            patch_name = patch_list_json["current_patch"][0]["name"].encode("utf-8")
+            patch_md5 = patch_list_json["current_patch"][0]["md5"].encode("utf-8")
 
             local_patch_info = self.patch_status_config.get("data_md5", space_name)
             if not local_patch_info or (local_patch_info and eval(local_patch_info)[1] != patch_md5):
