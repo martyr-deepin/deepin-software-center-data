@@ -29,7 +29,6 @@ from deepin_utils.ipc import auth_with_policykit, is_dbus_name_exists
 from deepin_utils.file import get_parent_dir, create_directory, remove_file, remove_directory, remove_path
 from deepin_utils.config import Config
 from deepin_utils.hash import md5_file
-from pystorm.tasks import TaskObject
 from pystorm.logger import setLevelNo
 import logging
 setLevelNo(logging.INFO)
@@ -260,20 +259,24 @@ class UpdateDataService(dbus.service.Object):
                 local_patch_file = os.path.join(patch_dir, patch_name)
                 
                 # TODO: 此处添加下载返回值判断
-                download_task = TaskObject(download_url, local_patch_file, verbose=False)
-                download_task.run()
+                os.system("wget %s -t 5 -c -O %s" % (download_url, local_patch_file))
+                try:
+                    download_md5 = md5_file(local_patch_file)
 
-                if download_task.isfinish() and md5_file(local_patch_file) == patch_md5:
-                    self.have_update.append(space_name)
-                    if local_patch_info:
-                        remove_file(os.path.join(self.data_patch_dir, eval(local_patch_info)[0]))
-                    self.patch_status_config.set("data_md5", space_name, [patch_name, patch_md5])
-                    self.patch_status_config.write()
-                    print "%s: 补丁%s下载成功" % (space_name, patch_name)
-                    log("%s: 补丁%s下载成功" % (space_name, patch_name))
-                else:
-                    print "%s: 补丁%s下载错误" (space_name, patch_name)
-                    log("%s: 补丁%s下载错误" (space_name, patch_name))
+                    if download_md5 == patch_md5:
+                        self.have_update.append(space_name)
+                        if local_patch_info:
+                            remove_file(os.path.join(self.data_patch_dir, eval(local_patch_info)[0]))
+                        self.patch_status_config.set("data_md5", space_name, [patch_name, patch_md5])
+                        self.patch_status_config.write()
+                        print "%s: 补丁%s下载成功" % (space_name, patch_name)
+                        log("%s: 补丁%s下载成功" % (space_name, patch_name))
+                    else:
+                        print "%s: 补丁%s下载错误" (space_name, patch_name)
+                        log("%s: 补丁%s下载错误" (space_name, patch_name))
+                except:
+                    print "%s: 补丁%s下载失败" (space_name, patch_name)
+                    log("%s: 补丁%s下载失败" (space_name, patch_name))
             else:
                 print "%s: 当前数据是最新的" % space_name
                 log("%s: 当前数据是最新的" % space_name)
