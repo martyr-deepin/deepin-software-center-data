@@ -341,7 +341,7 @@ if __name__ == "__main__":
             
             # Init package manager.
             log("Start update data...")
-            arguments.append("--test")
+            #arguments.append("--test")
             UpdateDataService(system_bus, mainloop).run("--test" in arguments)
             
             # Run.
