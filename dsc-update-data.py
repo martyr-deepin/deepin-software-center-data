@@ -55,6 +55,15 @@ UPDATE_DATA_URL = "b0.upaiyun.com"
 
 LOG_PATH = "/tmp/dsc-update-data.log"
 
+DATA_SPACE_NAME = [
+        'dsc-software-data',
+        'dsc-desktop-data',
+        'dsc-search-data',
+        'dsc-icon-data',
+        'dsc-home-data',
+        'dsc-category-data',
+        ]
+
 def log(message):
     with open(LOG_PATH, "a") as file_handler:
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -119,12 +128,8 @@ class UpdateDataService(dbus.service.Object):
         if not os.path.exists(self.data_patch_config_filepath):
             self.patch_status_config = Config(self.data_patch_config_filepath)
             self.patch_status_config.load()
-            self.patch_status_config.set("data_md5", "dsc-search-data", "")
-            self.patch_status_config.set("data_md5", "dsc-category-data", "")
-            self.patch_status_config.set("data_md5", "dsc-software-data", "")
-            self.patch_status_config.set("data_md5", "dsc-home-data", "")
-            self.patch_status_config.set("data_md5", "dsc-icon-data", "")
-            self.patch_status_config.set("data_md5", "dsc-desktop-data", "")
+            for space_name in DATA_SPACE_NAME:
+                self.patch_status_config.set("data_md5", space_name, "")
             self.patch_status_config.write()
         else:
             self.patch_status_config = Config(self.data_patch_config_filepath)
@@ -143,6 +148,13 @@ class UpdateDataService(dbus.service.Object):
             # Extra data.
             newest_data_id = self.get_unique_id()
             newest_data_dir = os.path.join(DATA_DIR, "update", newest_data_id)
+
+            for space_name in DATA_SPACE_NAME:
+                data_filename = "%s.tar.gz" % space_name
+                origin_data_file = os.path.join(self.data_origin_dir, data_filename)
+                newest_data_file = os.path.join(self.data_newest_dir, data_filename)
+                if not os.path.exists(newest_data_file):
+                    os.system('cp %s %s' % (origin_data_file, newest_data_file))
             
             print "解压最新数据..."
             log("解压最新数据...")
