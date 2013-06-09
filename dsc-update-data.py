@@ -264,7 +264,7 @@ class UpdateDataService(dbus.service.Object):
             patch_md5 = patch_list_json["current_patch"][0]["md5"].encode("utf-8")
 
             local_patch_info = self.patch_status_config.get("data_md5", space_name)
-            if not local_patch_info or (local_patch_info and eval(local_patch_info)[1] != patch_md5):
+            if local_patch_info == '' or (local_patch_info != '' and eval(local_patch_info)[1] != patch_md5):
                 
                 # Start download.
                 download_url = "%s/patch/%s/%s" % (remote_url, origin_data_md5, patch_name)
