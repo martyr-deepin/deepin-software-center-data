@@ -38,7 +38,6 @@ import tarfile
 import uuid
 import subprocess
 from datetime import datetime
-import time
 import json
 
 from constant import UPDATE_DATE
@@ -54,6 +53,7 @@ DATA_DIR = os.path.join(get_parent_dir(__file__), "data")
 UPDATE_DATA_URL = "b0.upaiyun.com"
 
 LOG_PATH = "/tmp/dsc-update-data.log"
+DATA_CURRENT_ID_CONFIG_PATH = '/tmp/deepin-software-center/data_current_id.ini'
 
 DATA_SPACE_NAME = [
         'dsc-software-data',
@@ -169,68 +169,63 @@ class UpdateDataService(dbus.service.Object):
             self.newest_data_id_config.set("newest", "data_id", newest_data_id)
             self.newest_data_id_config.write()
 
-        if self.have_update != []:
-            if is_dbus_name_exists(DSC_SERVICE_NAME, True):
-                print "debug 3"
-                log("前端正在运行，等待结束后清理数据")
-                session_bus = dbus.SessionBus()
-                bus_obj = session_bus.get_object(DSC_SERVICE_NAME, DSC_SERVICE_PATH)
-                bus_interface = dbus.Interface(bus_obj, DSC_SERVICE_NAME)
-                bus_interface.say_hello()
-                session_bus.add_signal_receiver(
-                        self.dsc_fronend_signal_handler,
-                        dbus_interface = DSC_SERVICE_NAME,
-                        path = DSC_SERVICE_PATH,
-                        )
-            else:
-                self.clear_data_folder()
-                glib.timeout_add(200, self.mainloop.quit)
-                print "debug 1"
-                log("Finish update data.")
+        if self.is_fontend_running():
+            print 'Frontend is running, clear data next time!'
+            log('Frontend is running, clear data next time!')
         else:
-            print "debug 2"
-            glib.timeout_add(200, self.mainloop.quit)
-            log("Finish update data.")
+            print 'Clear unused data.'
+            log('Clear unused data.')
+            self.clear_data_folder()
 
-    def dsc_fronend_signal_handler(self, messages):
-        for message in messages:
-            if message == "frontend-quit":
-                time.sleep(1)
-                self.clear_data_folder()
-                glib.timeout_add(200, self.mainloop.quit)
-                log("Finish update data.")
+        print 'Done!'
+        log("Done!")
+        glib.timeout_add(200, self.mainloop.quit)
+
+    def is_fontend_running(self):
+        if os.path.exists(DATA_CURRENT_ID_CONFIG_PATH):
+            config = Config(DATA_CURRENT_ID_CONFIG_PATH)
+            config.load()
+            data_id = config.get('current', 'data_id')
+            if data_id:
+                return True
+            else:
+                return False
+        else:
+            False
 
     def clear_data_folder(self):
-        # TODO: Design how to remove unused data when UI is running
-        DATA_CURRENT_ID_CONFIG_FILE = "/tmp/deepin-software-center/data_current_id.ini"
-        if os.path.exists(DATA_CURRENT_ID_CONFIG_FILE):
-            current_data_id_config = Config(DATA_CURRENT_ID_CONFIG_FILE)
+        # clear data when ui is not running
+
+        # judge which data is in using
+        if os.path.exists(DATA_CURRENT_ID_CONFIG_PATH):
+            current_data_id_config = Config(DATA_CURRENT_ID_CONFIG_PATH)
             current_data_id_config.load()
             current_data_id = current_data_id_config.get("current", "data_id")
         else:
             current_data_id = None
+
         self.newest_data_id_config.load()
+        newest_data_id = self.newest_data_id_config.get("newest", "data_id")
         data_file_list = ["newest",
                           "origin",
                           "patch",
                           "update",
-                          "data_current_id.ini", 
                           "data_newest_id.ini",
                           "patch_status.ini",
-                          "clean.py",
                           ]
-        data_id_list = [current_data_id,
-                        self.newest_data_id_config.get("newest", "data_id")]
+        data_id_list = (current_data_id, newest_data_id)
         
         for data_file in os.listdir(DATA_DIR):
             if data_file not in data_file_list:
                 remove_directory(os.path.join(DATA_DIR, data_file))
-                print "remove file: %s" % data_file
-                log("remove file: %s" % data_file)
+                print ">> remove file: %s" % data_file
+                log(">> remove file: %s" % data_file)
             elif data_file == "update":
                 for data_id in os.listdir(os.path.join(DATA_DIR, "update")):
                     if data_id not in data_id_list:
                         remove_directory(os.path.join(DATA_DIR, "update", data_id))
+                        print '>> remove old data: %s' % data_id
+                        log('>> remove old data: %s' % data_id)
         
     def download_data(self, data_file, test):
         origin_data_md5 = md5_file(os.path.join(self.data_origin_dir, data_file))
