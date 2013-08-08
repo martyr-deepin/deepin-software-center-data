@@ -60,7 +60,6 @@ DATA_SPACE_NAME = [
         'dsc-desktop-data',
         'dsc-search-data',
         'dsc-icon-data',
-        'dsc-home-data',
         'dsc-category-data',
         ]
 
