@@ -11,3 +11,4 @@ data/newest
 data/patch
 data/update
 data/*.ini
+data/cache_soft.db

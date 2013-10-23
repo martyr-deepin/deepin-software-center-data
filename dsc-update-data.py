@@ -211,6 +211,7 @@ class UpdateDataService(dbus.service.Object):
                           "update",
                           "data_newest_id.ini",
                           "patch_status.ini",
+                          "cache_soft.db",
                           ]
         data_id_list = (current_data_id, newest_data_id)
         
