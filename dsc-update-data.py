@@ -212,6 +212,7 @@ class UpdateDataService(dbus.service.Object):
                           "data_newest_id.ini",
                           "patch_status.ini",
                           "cache_soft.db",
+                          "origin_data_time"
                           ]
         data_id_list = (current_data_id, newest_data_id)
         
@@ -251,7 +252,6 @@ class UpdateDataService(dbus.service.Object):
         try:
             patch_list_json = json.load(urllib2.urlopen(patch_list_url))
         except Exception, e:
-            print e
             patch_list_json = ""
             
         if patch_list_json != "":
