@@ -236,16 +236,10 @@ class UpdateDataService(dbus.service.Object):
         # Create download directory.
         create_directory(patch_dir)
                 
-        if space_name == "dsc-icon-data":
-            if test:
-                remote_url = "http://%s.%s/3.0_test" % (space_name, UPDATE_DATA_URL)
-            else:
-                remote_url = "http://%s.%s/3.0" % (space_name, UPDATE_DATA_URL)
+        if test:
+            remote_url = "http://%s.%s/test" % (space_name, UPDATE_DATA_URL)
         else:
-            if test:
-                remote_url = "http://%s.%s/3.0_test/zh_CN" % (space_name, UPDATE_DATA_URL)
-            else:
-                remote_url = "http://%s.%s/3.0/zh_CN" % (space_name, UPDATE_DATA_URL)
+            remote_url = "http://%s.%s/3.1" % (space_name, UPDATE_DATA_URL)
             
         patch_list_url = "%s/patch/%s/patch_md5.json" % (remote_url, origin_data_md5)    
 
